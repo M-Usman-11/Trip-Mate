@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TripRate — Rate &amp; Review Places</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#182320;
+    --paper:#F6F2E8;
+    --panel:#FFFFFF;
+    --accent:#B9832A;
+    --accent-2:#2E6B66;
+    --line:#E2DAC6;
+    --muted:#6E6859;
+    --radius:10px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#F0EDE4; --paper:#14201C; --panel:#1B2622; --line:#2B3732; --muted:#A7A192; --accent:#D9A64B; --accent-2:#5FA39C;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#F0EDE4; --paper:#14201C; --panel:#1B2622; --line:#2B3732; --muted:#A7A192; --accent:#D9A64B; --accent-2:#5FA39C;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  h1,h2,h3,.serif{font-family:'Fraunces',Georgia,serif;}
+  .wrap{max-width:720px;margin:0 auto;padding:0 18px 48px;}
+  header.app{
+    position:sticky;top:0;top:env(safe-area-inset-top,0px);
+    background:var(--paper);z-index:10;
+    border-bottom:1px solid var(--line);
+    padding:18px 18px 14px;
+  }
+  header.app .wrap{padding:0;}
+  .brand{display:flex;align-items:baseline;gap:8px;}
+  .brand .mark{font-size:22px;}
+  .brand h1{font-size:22px;font-weight:600;margin:0;letter-spacing:.2px;}
+  .tagline{color:var(--muted);font-size:13px;margin:4px 0 14px;}
+  .search{
+    display:flex;align-items:center;gap:8px;
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:999px;padding:10px 16px;
+  }
+  .search input{
+    border:none;outline:none;background:transparent;color:var(--ink);
+    font-family:inherit;font-size:15px;width:100%;
+  }
+  .search input::placeholder{color:var(--muted);}
+  .search svg{flex:none;opacity:.6;}
+
+  main{padding-top:16px;}
+  .section-label{font-size:12px;color:var(--muted);margin:22px 0 10px;}
+  .list{display:flex;flex-direction:column;}
+  .place-row{
+    display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);
+    cursor:pointer;background:none;border-left:none;border-right:none;border-top:none;
+    text-align:left;width:100%;color:inherit;font-family:inherit;
+  }
+  .place-row:first-child{padding-top:4px;}
+  .place-row:focus-visible{outline:2px solid var(--accent-2);outline-offset:3px;}
+  .thumb{width:84px;height:84px;border-radius:var(--radius);overflow:hidden;flex:none;background:var(--line);}
+  .thumb svg{width:100%;height:100%;display:block;}
+  .place-info{min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px;}
+  .place-info h3{font-size:17px;font-weight:600;margin:0;line-height:1.25;}
+  .place-info .loc{font-size:13px;color:var(--muted);}
+  .stars{display:inline-flex;gap:2px;}
+  .stars svg{width:14px;height:14px;}
+  .rating-line{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);}
+  .rating-line .num{color:var(--ink);font-weight:600;}
+  .empty{color:var(--muted);font-size:14px;padding:30px 0;text-align:center;}
+
+  /* detail view */
+  #detail{display:none;}
+  .back{
+    display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--accent-2);
+    font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:16px 0 4px;
+  }
+  .hero{width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:var(--line);margin-top:6px;}
+  .hero svg{width:100%;height:100%;display:block;}
+  .detail-head{margin-top:16px;}
+  .detail-head h2{font-size:26px;margin:0 0 4px;}
+  .detail-head .loc{color:var(--muted);font-size:14px;}
+  .rating-summary{
+    display:flex;align-items:center;gap:10px;margin-top:12px;padding:12px 14px;
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  }
+  .rating-summary .avg{font-family:'Fraunces',serif;font-size:28px;line-height:1;}
+  .rating-summary .meta{display:flex;flex-direction:column;gap:3px;}
+  .rating-summary .count{font-size:12px;color:var(--muted);}
+  .desc{margin-top:16px;font-size:15px;line-height:1.6;color:var(--ink);}
+
+  .review-form{
+    margin-top:28px;background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);padding:16px;
+  }
+  .review-form h3{font-size:16px;margin:0 0 12px;}
+  .star-picker{display:flex;gap:6px;margin-bottom:12px;}
+  .star-picker button{
+    background:none;border:none;cursor:pointer;padding:2px;line-height:0;
+  }
+  .star-picker svg{width:26px;height:26px;}
+  .review-form label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px;}
+  .review-form input[type="text"], .review-form textarea{
+    width:100%;background:var(--paper);border:1px solid var(--line);border-radius:8px;
+    padding:10px 12px;font-family:inherit;font-size:14px;color:var(--ink);resize:vertical;
+  }
+  .review-form textarea{min-height:72px;}
+  .review-form .submit{
+    margin-top:14px;background:var(--accent);color:#1B130A;border:none;border-radius:999px;
+    padding:11px 20px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;
+  }
+  .review-form .hint{font-size:12px;color:var(--muted);margin-top:8px;}
+  .toast{font-size:13px;color:var(--accent-2);margin-top:10px;font-weight:600;display:none;}
+
+  .reviews{margin-top:24px;}
+  .review-entry{padding:16px 0;border-bottom:1px solid var(--line);}
+  .review-entry:first-child{padding-top:0;}
+  .review-head{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .review-user{font-weight:600;font-size:14px;}
+  .review-date{font-size:12px;color:var(--muted);}
+  .review-text{font-size:14px;line-height:1.55;margin-top:6px;}
+
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 0 10px;}
+
+  @media (min-width:600px){
+    .list{display:grid;grid-template-columns:1fr 1fr;gap:0 20px;}
+    .place-row{border-bottom:1px solid var(--line);}
+  }
+</style>
+</head>
+<body>
+
+<header class="app">
+  <div class="wrap">
+    <div class="brand"><span class="mark">🧭</span><h1>TripRate</h1></div>
+    <p class="tagline">Real notes from real trips — rate it, review it.</p>
+    <div class="search">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="searchInput" type="text" placeholder="Search places or cities…" autocomplete="off">
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="home">
+    <p class="section-label" id="listLabel">ALL PLACES</p>
+    <div class="list" id="placeList"></div>
+    <p class="empty" id="emptyMsg" style="display:none;">No places match “<span id="emptyQuery"></span>”.</p>
+  </section>
+
+  <section id="detail">
+    <button class="back" id="backBtn">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      Back to places
+    </button>
+    <div class="hero" id="detailHero"></div>
+    <div class="detail-head">
+      <h2 id="detailName"></h2>
+      <div class="loc" id="detailLoc"></div>
+    </div>
+    <div class="rating-summary">
+      <div class="avg" id="detailAvg">—</div>
+      <div class="meta">
+        <div class="stars" id="detailStars"></div>
+        <div class="count" id="detailCount"></div>
+      </div>
+    </div>
+    <p class="desc" id="detailDesc"></p>
+
+    <div class="review-form">
+      <h3>Write a review</h3>
+      <label>Your rating</label>
+      <div class="star-picker" id="starPicker"></div>
+      <label for="reviewName">Your name</label>
+      <input type="text" id="reviewName" placeholder="e.g. Jordan">
+      <label for="reviewText">Your review</label>
+      <textarea id="reviewText" placeholder="What stood out about this place?"></textarea>
+      <button class="submit" id="submitReview">Post review</button>
+      <p class="hint">Reviews are stored on this device only.</p>
+      <p class="toast" id="toast">Thanks — your review was posted.</p>
+    </div>
+
+    <div class="reviews" id="reviewsSection">
+      <p class="section-label">REVIEWS</p>
+      <div id="reviewsList"></div>
+    </div>
+  </section>
+
+  <footer>TripRate · sample data for demo purposes</footer>
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- star icon helpers ----------
+  function starSVG(filled){
+    return '<svg viewBox="0 0 24 24" width="14" height="14">'+
+      '<path fill="'+(filled?'var(--accent)':'none')+'" stroke="var(--accent)" stroke-width="1.6" '+
+      'd="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z"/></svg>';
+  }
+  function starsHTML(avg){
+    var out='';
+    for(var i=1;i<=5;i++){ out+=starSVG(i<=Math.round(avg)); }
+    return out;
+  }
+
+  // ---------- generative place art (no external images) ----------
+  function placeArt(p, big){
+    var w=400,h=big?225:168;
+    var id='g'+p.id;
+    var sky=p.palette[0], ground=p.palette[1], accent=p.palette[2];
+    var shapes='';
+    if(p.scene==='peaks'){
+      shapes='<circle cx="320" cy="46" r="26" fill="'+accent+'" opacity=".9"/>'+
+        '<polygon points="0,'+h+' 90,'+(h*0.45)+' 160,'+h+'" fill="'+ground+'" opacity=".95"/>'+
+        '<polygon points="110,'+h+' 230,'+(h*0.3)+' 330,'+h+'" fill="'+ground+'"/>'+
+        '<polygon points="250,'+h+' 340,'+(h*0.5)+' 400,'+h+'" fill="'+ground+'" opacity=".8"/>';
+    } else if(p.scene==='waves'){
+      shapes='<circle cx="60" cy="50" r="30" fill="'+accent+'" opacity=".9"/>'+
+        '<path d="M0,'+(h*0.62)+' Q50,'+(h*0.5)+' 100,'+(h*0.62)+' T200,'+(h*0.62)+' T300,'+(h*0.62)+' T400,'+(h*0.62)+' V'+h+' H0 Z" fill="'+ground+'" opacity=".55"/>'+
+        '<path d="M0,'+(h*0.78)+' Q50,'+(h*0.68)+' 100,'+(h*0.78)+' T200,'+(h*0.78)+' T300,'+(h*0.78)+' T400,'+(h*0.78)+' V'+h+' H0 Z" fill="'+ground+'"/>';
+    } else if(p.scene==='dunes'){
+      shapes='<circle cx="330" cy="40" r="22" fill="'+accent+'"/>'+
+        '<path d="M0,'+h+' C80,'+(h*0.55)+' 160,'+(h*0.9)+' 260,'+(h*0.6)+' C330,'+(h*0.4)+' 380,'+(h*0.75)+' 400,'+(h*0.65)+' V'+h+' Z" fill="'+ground+'"/>';
+    } else if(p.scene==='skyline'){
+      shapes='<circle cx="60" cy="40" r="20" fill="'+accent+'" opacity=".85"/>'+
+        '<rect x="30" y="'+(h*0.5)+'" width="34" height="'+(h*0.5)+'" fill="'+ground+'"/>'+
+        '<rect x="80" y="'+(h*0.35)+'" width="40" height="'+(h*0.65)+'" fill="'+ground+'"/>'+
+        '<rect x="135" y="'+(h*0.55)+'" width="28" height="'+(h*0.45)+'" fill="'+ground+'" opacity=".85"/>'+
+        '<rect x="180" y="'+(h*0.25)+'" width="46" height="'+(h*0.75)+'" fill="'+ground+'"/>'+
+        '<rect x="240" y="'+(h*0.45)+'" width="30" height="'+(h*0.55)+'" fill="'+ground+'" opacity=".85"/>'+
+        '<rect x="285" y="'+(h*0.6)+'" width="38" height="'+(h*0.4)+'" fill="'+ground+'"/>'+
+        '<rect x="335" y="'+(h*0.3)+'" width="40" height="'+(h*0.7)+'" fill="'+ground+'" opacity=".9"/>';
+    } else if(p.scene==='forest'){
+      shapes='<circle cx="340" cy="38" r="22" fill="'+accent+'"/>';
+      for(var i=0;i<7;i++){
+        var x=20+i*52, th=h*(0.5+((i%3)*0.12));
+        shapes+='<polygon points="'+x+','+h+' '+(x+26)+','+(h-th)+' '+(x+52)+','+h+'" fill="'+ground+'" opacity="'+(0.7+(i%3)*0.1)+'"/>';
+      }
+    } else { // temple / cultural -> arches
+      shapes='<circle cx="60" cy="42" r="22" fill="'+accent+'"/>'+
+        '<rect x="20" y="'+(h*0.55)+'" width="360" height="'+(h*0.45)+'" fill="'+ground+'"/>'+
+        '<path d="M50,'+(h*0.55)+' a30,30 0 0 1 60,0 Z" fill="'+sky+'"/>'+
+        '<path d="M150,'+(h*0.55)+' a30,30 0 0 1 60,0 Z" fill="'+sky+'"/>'+
+        '<path d="M250,'+(h*0.55)+' a30,30 0 0 1 60,0 Z" fill="'+sky+'"/>';
+    }
+    return '<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">'+
+      '<rect width="'+w+'" height="'+h+'" fill="'+sky+'"/>'+shapes+'</svg>';
+  }
+
+  // ---------- mock data ----------
+  var MOCK_PLACES = [
+    {id:'p1', name:'Blue Ridge Overlook', location:'Asheville, USA', scene:'peaks', palette:['#9FC6D8','#3C5A68','#F2C879'],
+      description:'A high ridgeline trail with sweeping layered-mountain views, best caught at sunrise when the valleys fill with mist.'},
+    {id:'p2', name:'Caleta Cove', location:'Algarve, Portugal', scene:'waves', palette:['#CDEDE6','#1F6E66','#F4D35E'],
+      description:'A small limestone cove with calm turquoise water, reachable by a short cliffside staircase. Quiet outside peak summer.'},
+    {id:'p3', name:'Saffron Dunes', location:'Merzouga, Morocco', scene:'dunes', palette:['#F6E0B5','#D99A3F','#E8603C'],
+      description:'Rolling Sahara dunes that shift color through the day — soft gold at noon, deep amber at dusk. Camel treks run at sunset.'},
+    {id:'p4', name:'Lantern District', location:'Hoi An, Vietnam', scene:'skyline', palette:['#F7DCC0','#C0573E','#F2A65A'],
+      description:'An old-town riverside quarter strung with silk lanterns, tailor shops, and lantern-lit boats after dark.'},
+    {id:'p5', name:'Whisperpine Trail', location:'Lake Tahoe, USA', scene:'forest', palette:['#D7E8DC','#355E45','#E2B14C'],
+      description:'A shaded pine forest loop along the lakeshore, popular with early-morning walkers and easy for most fitness levels.'},
+    {id:'p6', name:'Marigold Courtyard', location:'Jaipur, India', scene:'temple', palette:['#F7E3B0','#C96A3E','#E0A33C'],
+      description:'A sandstone courtyard with scalloped archways, known for its marigold garland sellers and carved stone screens.'},
+    {id:'p7', name:'Fjordlight Pier', location:'Bergen, Norway', scene:'waves', palette:['#DCEAF2','#2B4C63','#89B8C9'],
+      description:'A working pier on a narrow fjord with colorful wooden warehouses behind it, lively with fish stalls in the morning.'},
+    {id:'p8', name:'Terrace Vineyards', location:'Douro Valley, Portugal', scene:'peaks', palette:['#E9D9B6','#6B7A3F','#B3542E'],
+      description:'Stepped vineyard terraces carved into steep river hills, with small quintas offering tastings overlooking the water.'}
+  ];
+
+  var MOCK_REVIEWS = {
+    p1:[{user:'Maya K.',rating:5,text:'Sunrise here was unreal — worth the early alarm.',date:'2026-08-02'},
+        {user:'Devon R.',rating:4,text:'Trail was a bit crowded by 9am but views made up for it.',date:'2026-07-11'}],
+    p2:[{user:'Sofia P.',rating:5,text:'Smallest, calmest cove we found on the whole coast.',date:'2026-06-20'},
+        {user:'Iain B.',rating:4,text:'Steps down are steep but totally worth it.',date:'2026-05-30'},
+        {user:'Priya N.',rating:3,text:'Lovely but very busy by midday in August.',date:'2026-08-14'}],
+    p3:[{user:'Omar F.',rating:5,text:'Watching the dunes change color at sunset was magic.',date:'2026-04-18'},
+        {user:'Lena W.',rating:5,text:'Camel trek guide was fantastic, highly recommend at dusk.',date:'2026-03-02'}],
+    p4:[{user:'Trang H.',rating:5,text:'Lanterns at night make the whole old town glow.',date:'2026-09-05'},
+        {user:'Marco T.',rating:4,text:'Great for an evening stroll, bring cash for the boats.',date:'2026-07-22'}],
+    p5:[{user:'Grace L.',rating:4,text:'Peaceful and shaded, good for a hot afternoon.',date:'2026-06-09'}],
+    p6:[{user:'Arjun S.',rating:5,text:'The stonework here is incredible, go slow and look up.',date:'2026-02-14'},
+        {user:'Fatima Z.',rating:4,text:'Lovely light in the late afternoon.',date:'2026-01-28'}],
+    p7:[{user:'Nils O.',rating:5,text:'Buy fish straight off the boats, best breakfast ever.',date:'2026-05-03'},
+        {user:'Harriet D.',rating:5,text:'Colorful houses are even nicer in person.',date:'2026-04-11'}],
+    p8:[{user:'Catarina M.',rating:5,text:'Tasting with a view over the terraces was unforgettable.',date:'2026-09-19'},
+        {user:'Ben S.',rating:4,text:'Steep paths between terraces, wear good shoes.',date:'2026-08-27'}]
+  };
+
+  // ---------- state (persisted reviews only, per device) ----------
+  var reviews = {};
+  try{
+    var saved = localStorage.getItem('triprate-reviews');
+    reviews = saved ? JSON.parse(saved) : {};
+  }catch(e){ reviews = {}; }
+  Object.keys(MOCK_REVIEWS).forEach(function(id){
+    reviews[id] = reviews[id] ? reviews[id] : MOCK_REVIEWS[id].slice();
+  });
+  function persist(){
+    try{ localStorage.setItem('triprate-reviews', JSON.stringify(reviews)); }catch(e){}
+  }
+
+  function avgRating(id){
+    var r = reviews[id] || [];
+    if(!r.length) return 0;
+    var sum = r.reduce(function(a,b){return a+b.rating;},0);
+    return sum / r.length;
+  }
+
+  // ---------- render: home list ----------
+  var placeList = document.getElementById('placeList');
+  var emptyMsg = document.getElementById('emptyMsg');
+  var emptyQuery = document.getElementById('emptyQuery');
+  var listLabel = document.getElementById('listLabel');
+
+  function renderList(query){
+    query = (query||'').trim().toLowerCase();
+    var items = MOCK_PLACES.filter(function(p){
+      return !query || p.name.toLowerCase().indexOf(query)>-1 || p.location.toLowerCase().indexOf(query)>-1;
+    });
+    placeList.innerHTML = items.map(function(p){
+      var avg = avgRating(p.id);
+      var count = (reviews[p.id]||[]).length;
+      return '<button class="place-row" data-id="'+p.id+'">'+
+        '<div class="thumb">'+placeArt(p,false)+'</div>'+
+        '<div class="place-info">'+
+          '<h3>'+p.name+'</h3>'+
+          '<div class="loc">'+p.location+'</div>'+
+          '<div class="rating-line"><span class="stars">'+starsHTML(avg)+'</span><span class="num">'+(avg?avg.toFixed(1):'—')+'</span> ('+count+')</div>'+
+        '</div></button>';
+    }).join('');
+    emptyMsg.style.display = items.length ? 'none':'block';
+    emptyQuery.textContent = query;
+    listLabel.textContent = query ? 'SEARCH RESULTS' : 'ALL PLACES';
+    Array.prototype.forEach.call(placeList.querySelectorAll('.place-row'), function(btn){
+      btn.addEventListener('click', function(){ openDetail(btn.getAttribute('data-id')); });
+    });
+  }
+
+  document.getElementById('searchInput').addEventListener('input', function(e){
+    renderList(e.target.value);
+  });
+
+  // ---------- detail view ----------
+  var homeSection = document.getElementById('home');
+  var detailSection = document.getElementById('detail');
+  var currentId = null;
+  var pickedRating = 0;
+
+  function buildStarPicker(){
+    var el = document.getElementById('starPicker');
+    el.innerHTML='';
+    for(var i=1;i<=5;i++){
+      (function(n){
+        var btn = document.createElement('button');
+        btn.type='button';
+        btn.innerHTML = starSVG(false);
+        btn.addEventListener('click', function(){
+          pickedRating = n;
+          Array.prototype.forEach.call(el.children, function(c,idx){
+            c.innerHTML = starSVG(idx < n);
+          });
+        });
+        el.appendChild(btn);
+      })(i);
+    }
+  }
+
+  function renderReviews(id){
+    var list = (reviews[id]||[]).slice().sort(function(a,b){ return a.date < b.date ? 1 : -1; });
+    var el = document.getElementById('reviewsList');
+    if(!list.length){
+      el.innerHTML = '<p class="empty">No reviews yet — be the first to write one.</p>';
+      return;
+    }
+    el.innerHTML = list.map(function(r){
+      return '<div class="review-entry">'+
+        '<div class="review-head"><span class="review-user">'+escapeHTML(r.user)+'</span><span class="review-date">'+formatDate(r.date)+'</span></div>'+
+        '<div class="stars">'+starsHTML(r.rating)+'</div>'+
+        '<div class="review-text">'+escapeHTML(r.text)+'</div></div>';
+    }).join('');
+  }
+
+  function escapeHTML(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function formatDate(iso){
+    var d = new Date(iso+'T00:00:00');
+    if(isNaN(d)) return iso;
+    return d.toLocaleDateString(undefined,{month:'short', day:'numeric', year:'numeric'});
+  }
+
+  function openDetail(id){
+    var p = MOCK_PLACES.find(function(x){return x.id===id;});
+    if(!p) return;
+    currentId = id;
+    document.getElementById('detailHero').innerHTML = placeArt(p, true);
+    document.getElementById('detailName').textContent = p.name;
+    document.getElementById('detailLoc').textContent = p.location;
+    document.getElementById('detailDesc').textContent = p.description;
+    var avg = avgRating(id), count=(reviews[id]||[]).length;
+    document.getElementById('detailAvg').textContent = avg?avg.toFixed(1):'—';
+    document.getElementById('detailStars').innerHTML = starsHTML(avg);
+    document.getElementById('detailCount').textContent = count+' review'+(count===1?'':'s');
+    renderReviews(id);
+    pickedRating = 0;
+    buildStarPicker();
+    document.getElementById('reviewName').value='';
+    document.getElementById('reviewText').value='';
+    document.getElementById('toast').style.display='none';
+    homeSection.style.display='none';
+    detailSection.style.display='block';
+    window.scrollTo(0,0);
+  }
+
+  document.getElementById('backBtn').addEventListener('click', function(){
+    detailSection.style.display='none';
+    homeSection.style.display='block';
+    renderList(document.getElementById('searchInput').value);
+  });
+
+  document.getElementById('submitReview').addEventListener('click', function(){
+    var name = document.getElementById('reviewName').value.trim();
+    var text = document.getElementById('reviewText').value.trim();
+    var toast = document.getElementById('toast');
+    if(!currentId || pickedRating===0 || !name || !text){
+      toast.textContent='Add your name, a star rating, and a short review.';
+      toast.style.color = '#C0573E';
+      toast.style.display='block';
+      return;
+    }
+    var today = new Date().toISOString().slice(0,10);
+    reviews[currentId] = reviews[currentId] || [];
+    reviews[currentId].unshift({user:name, rating:pickedRating, text:text, date:today});
+    persist();
+    toast.textContent='Thanks — your review was posted.';
+    toast.style.color = 'var(--accent-2)';
+    toast.style.display='block';
+    openDetail(currentId);
+    var t = document.getElementById('toast');
+    t.textContent='Thanks — your review was posted.';
+    t.style.color='var(--accent-2)';
+    t.style.display='block';
+  });
+
+  // ---------- init ----------
+  renderList('');
+})();
+</script>
+</body>
+</html>
